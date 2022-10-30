@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String   @id @default(uuid()) @map("_id") @db.ObjectId
+  username   String   @unique
+  email      String   @unique
+  password   String
+  ownedRoom  Room?    @relation("ownedRoom")
+  joinedRoom Join?    @relation("roomMember")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now())
+}
+
+model Room {
+  id        String   @id @default(uuid()) @map("_id") @db.ObjectId
+  adminId   String   @unique @db.ObjectId
+  admin     User     @relation("ownedRoom", fields: [adminId], references: [id])
+  limit     Int
+  userCount Int
+  joins     Join[]   @relation("joinOrigin")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
+model Join {
+  id        String   @id @default(uuid()) @map("_id") @db.ObjectId
+  room      Room     @relation("joinOrigin", fields: [roomId], references: [id])
+  roomId    String
+  user      User     @relation("roomMember", fields: [userId], references: [id])
+  userId    String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
+model Log {
+  id                  String   @id @default(uuid()) @map("_id") @db.ObjectId
+  errorCode           Int
+  message             String
+  methodParams        Json
+  methodName          String
+  internalQueueNumber Int
+  createdAt           DateTime @default(now())
+}
